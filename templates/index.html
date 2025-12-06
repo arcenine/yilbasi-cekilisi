@@ -1,32 +1,169 @@
 <!DOCTYPE html>
-<html>
+<html lang="tr">
 <head>
-    <title>Yılbaşı Çekilişi</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Yılbaşı Çekilişi 2025</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.0.1/socket.io.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Mountains+of+Christmas:wght@700&family=Poppins:wght@400;600&display=swap" rel="stylesheet">
+    
     <style>
-        body { font-family: sans-serif; text-align: center; padding: 50px; }
-        #sonuc { font-size: 2em; color: green; display: none; }
-        #liste { list-style: none; padding: 0; }
+        /* GENEL AYARLAR */
+        body {
+            background-color: #b3000c; /* Yılbaşı Kırmızısı */
+            background-image: radial-gradient(circle, #d40012 10%, #8a0006 90%);
+            font-family: 'Poppins', sans-serif;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            color: #333;
+        }
+
+        /* ORTADAKİ BEYAZ KART */
+        .container {
+            background: rgba(255, 255, 255, 0.95);
+            padding: 30px;
+            border-radius: 20px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.3);
+            width: 90%;
+            max-width: 400px; /* Bilgisayarda çok geniş olmasın */
+            text-align: center;
+            border: 2px solid #eebb00; /* Altın rengi kenarlık */
+        }
+
+        h1 {
+            font-family: 'Mountains of Christmas', cursive;
+            font-size: 2.5rem;
+            color: #b3000c;
+            margin-bottom: 20px;
+            margin-top: 0;
+        }
+
+        /* GİRİŞ ALANLARI */
+        input {
+            width: 100%;
+            padding: 15px;
+            margin: 10px 0;
+            border: 1px solid #ddd;
+            border-radius: 10px;
+            font-size: 16px; /* Telefondan okuması kolay olsun */
+            box-sizing: border-box; /* Kutudan taşmayı engeller */
+            background-color: #f9f9f9;
+        }
+
+        input:focus {
+            outline: none;
+            border-color: #b3000c;
+            background-color: #fff;
+        }
+
+        /* BUTONLAR */
+        button {
+            width: 100%;
+            padding: 15px;
+            margin-top: 10px;
+            background-color: #0f7a38; /* Çam Ağacı Yeşili */
+            color: white;
+            border: none;
+            border-radius: 10px;
+            font-size: 18px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: background 0.3s;
+        }
+
+        button:active {
+            transform: scale(0.98); /* Basınca küçülme efekti */
+        }
+
+        /* LİSTE TASARIMI */
+        ul {
+            list-style: none;
+            padding: 0;
+            margin: 20px 0;
+            text-align: left;
+        }
+
+        li {
+            background: #fff3cd;
+            padding: 10px;
+            margin-bottom: 5px;
+            border-radius: 8px;
+            border-left: 5px solid #ffc107;
+            font-size: 1.1rem;
+        }
+
+        /* SONUÇ EKRANI */
+        #sonuc {
+            display: none;
+            animation: fadeIn 1s;
+        }
+
+        .hedef-kisi {
+            font-size: 2.5rem;
+            color: #b3000c;
+            font-family: 'Mountains of Christmas', cursive;
+            display: block;
+            margin-top: 20px;
+            text-shadow: 1px 1px 0px #ffd700;
+        }
+
+        /* ODA BİLGİSİ */
+        .oda-bilgisi {
+            font-size: 0.9rem;
+            color: #666;
+            margin-bottom: 15px;
+            background: #eee;
+            display: inline-block;
+            padding: 5px 15px;
+            border-radius: 20px;
+        }
+
+        /* Animasyon */
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .footer {
+            margin-top: 20px;
+            font-size: 0.8rem;
+            color: #888;
+        }
     </style>
 </head>
 <body>
-    <h1>🎄 Yılbaşı Çekilişi 🎄</h1>
-    
-    <div id="girisEkrani">
-        <input type="text" id="username" placeholder="Adınız">
-        <input type="text" id="room" placeholder="Oda Adı (örn: Aile)">
-        <button onclick="katil()">Lobiye Gir</button>
-    </div>
 
-    <div id="lobiEkrani" style="display:none;">
-        <h3>Lobi: <span id="odaAdi"></span></h3>
-        <ul id="liste"></ul>
-        <button onclick="baslat()">Çekilişi Başlat 🎲</button>
-    </div>
+    <div class="container">
+        <h1>🎄 Yılbaşı Çekilişi 🎄</h1>
+        
+        <div id="girisEkrani">
+            <p style="color:#666; margin-bottom:20px;">İsmini gir ve arkadaşlarınla aynı odaya bağlan!</p>
+            <input type="text" id="username" placeholder="Adınız (Örn: Berk)" autocomplete="off">
+            <input type="text" id="room" placeholder="Oda İsmi (Örn: Galata)" autocomplete="off">
+            <button onclick="katil()">Lobiye Gir 🎅</button>
+        </div>
 
-    <div id="sonuc">
-        Hediye Alacağın Kişi: <br>
-        <b id="hedefKisi"></b>
+        <div id="lobiEkrani" style="display:none;">
+            <div class="oda-bilgisi">Oda: <b id="odaAdi"></b></div>
+            <p>Arkadaşlarını bekliyoruz...</p>
+            
+            <ul id="liste">
+                </ul>
+            
+            <button onclick="baslat()" style="background-color: #d40012;">Çekilişi Başlat 🎲</button>
+        </div>
+
+        <div id="sonuc">
+            <p>🎁 Senin Hediye Alacağın Kişi:</p>
+            <span class="hedef-kisi" id="hedefKisi"></span>
+            <p style="margin-top:20px; font-size: 0.9rem;">Hadi iyisin, güzel bir hediye seç! 🎄</p>
+        </div>
+        
+        <div class="footer">Mutlu Yıllar! ✨</div>
     </div>
 
     <script>
@@ -34,13 +171,17 @@
         var myRoom = "";
 
         function katil() {
-            var user = document.getElementById('username').value;
-            myRoom = document.getElementById('room').value;
+            var user = document.getElementById('username').value.trim();
+            myRoom = document.getElementById('room').value.trim();
+            
             if(user && myRoom) {
                 socket.emit('lobiye_katil', {username: user, room: myRoom});
+                
                 document.getElementById('girisEkrani').style.display = 'none';
                 document.getElementById('lobiEkrani').style.display = 'block';
                 document.getElementById('odaAdi').innerText = myRoom;
+            } else {
+                alert("Lütfen isim ve oda adı girin!");
             }
         }
 
@@ -51,7 +192,7 @@
         socket.on('kullanici_listesi', function(isimler) {
             var listeHtml = "";
             isimler.forEach(function(isim) {
-                listeHtml += "<li>" + isim + "</li>";
+                listeHtml += "<li>👤 " + isim + "</li>";
             });
             document.getElementById('liste').innerHTML = listeHtml;
         });
