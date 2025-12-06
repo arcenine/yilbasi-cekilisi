@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Yılbaşı Çekilişi 2025</title>
+    <title>Yılbaşı Çekilişi / Secret Santa</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.0.1/socket.io.js"></script>
     <link href="https://fonts.googleapis.com/css2?family=Mountains+of+Christmas:wght@700&family=Poppins:wght@400;600&display=swap" rel="stylesheet">
     
@@ -20,6 +20,31 @@
             align-items: center;
             min-height: 100vh;
             color: #333;
+            position: relative;
+        }
+
+        /* DİL BUTONLARI */
+        .lang-switch {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            z-index: 100;
+        }
+
+        .lang-btn {
+            background: rgba(255, 255, 255, 0.2);
+            border: 1px solid rgba(255, 255, 255, 0.5);
+            color: white;
+            padding: 5px 10px;
+            cursor: pointer;
+            font-weight: bold;
+            border-radius: 5px;
+            transition: all 0.3s;
+        }
+
+        .lang-btn.active {
+            background: white;
+            color: #b3000c;
         }
 
         .container {
@@ -39,9 +64,9 @@
             color: #b3000c;
             margin-bottom: 20px;
             margin-top: 0;
+            line-height: 1.2;
         }
 
-        /* INPUTLAR */
         input {
             width: 100%;
             padding: 15px;
@@ -59,7 +84,6 @@
             background-color: #fff;
         }
 
-        /* BUTONLAR */
         button {
             width: 100%;
             padding: 15px;
@@ -78,7 +102,6 @@
             transform: scale(0.98);
         }
 
-        /* LİSTE */
         ul {
             list-style: none;
             padding: 0;
@@ -97,7 +120,6 @@
             font-size: 1rem;
         }
 
-        /* SONUÇ KUTUSU */
         #sonuc {
             display: none;
             animation: fadeIn 1s;
@@ -128,7 +150,6 @@
             color: #888;
         }
 
-        /* Animasyon */
         @keyframes fadeIn {
             from { opacity: 0; transform: translateY(20px); }
             to { opacity: 1; transform: translateY(0); }
@@ -137,24 +158,29 @@
 </head>
 <body>
 
+    <div class="lang-switch">
+        <button class="lang-btn active" onclick="setLang('tr')" id="btnTR">TR</button>
+        <button class="lang-btn" onclick="setLang('en')" id="btnEN">EN</button>
+    </div>
+
     <div class="container">
-        <h1>🎄 Yılbaşı Çekilişi 🎄</h1>
+        <h1 id="mainTitle">🎄 Yılbaşı Çekilişi 🎄</h1>
         
         <div id="girisEkrani">
-            <p style="color:#666; font-size: 0.9rem; margin-bottom:20px;">İsmini gir ve arkadaşlarınla aynı odaya bağlan!</p>
+            <p id="subTitle" style="color:#666; font-size: 0.9rem; margin-bottom:20px;">İsmini gir ve arkadaşlarınla aynı odaya bağlan!</p>
             <input type="text" id="username" placeholder="Adınız (Örn: Berk)" autocomplete="off">
             <input type="text" id="room" placeholder="Oda İsmi (Örn: Galata)" autocomplete="off">
-            <button onclick="katil()">Lobiye Gir 🎅</button>
+            <button onclick="katil()" id="joinBtn">Lobiye Gir 🎅</button>
         </div>
 
         <div id="lobiEkrani" style="display:none;">
-            <div class="oda-bilgisi">Oda: <b id="odaAdi"></b></div>
+            <div class="oda-bilgisi"><span id="roomLabel">Oda:</span> <b id="odaAdi"></b></div>
+            <p id="waitingText">Arkadaşlarını bekliyoruz...</p>
             
-            <ul id="liste">
-                </ul>
+            <ul id="liste"></ul>
             
             <div id="yoneticiPaneli" style="display:none;">
-                <button onclick="baslat()" style="background-color: #d40012;">Çekilişi Başlat 🎲</button>
+                <button onclick="baslat()" id="startBtn" style="background-color: #d40012;">Çekilişi Başlat 🎲</button>
             </div>
 
             <div id="beklemeMesaji" style="display:none; color: #666; font-style: italic; margin-top: 15px;">
@@ -163,32 +189,88 @@
         </div>
 
         <div id="sonuc">
-            <p>🎁 Hediye Alacağın Kişi:</p>
+            <p id="resultTitle">🎁 Hediye Alacağın Kişi:</p>
             <span class="hedef-kisi" id="hedefKisi"></span>
-            <p style="margin-top:20px; font-size: 0.9rem;">Hadi iyisin, güzel bir hediye seç! 🎄</p>
+            <p id="resultFooter" style="margin-top:20px; font-size: 0.9rem;">Hadi iyisin, güzel bir hediye seç! 🎄</p>
         </div>
         
-        <div class="footer">Mutlu Yıllar! ✨</div>
+        <div class="footer" id="footerText">Mutlu Yıllar! ✨</div>
     </div>
 
     <script>
         var socket = io();
         var myRoom = "";
+        var currentLang = "tr";
+
+        // DİL SÖZLÜĞÜ
+        const translations = {
+            tr: {
+                mainTitle: "🎄 Yılbaşı Çekilişi 🎄",
+                subTitle: "İsmini gir ve arkadaşlarınla aynı odaya bağlan!",
+                namePlaceholder: "Adınız (Örn: Berk)",
+                roomPlaceholder: "Oda İsmi (Örn: Galata)",
+                joinBtn: "Lobiye Gir 🎅",
+                roomLabel: "Oda:",
+                waitingText: "Arkadaşlarını bekliyoruz...",
+                startBtn: "Çekilişi Başlat 🎲",
+                waitingMsg: "Yöneticinin çekilişi başlatması bekleniyor... ⏳",
+                resultTitle: "🎁 Hediye Alacağın Kişi:",
+                resultFooter: "Hadi iyisin, güzel bir hediye seç! 🎄",
+                footerText: "Mutlu Yıllar! ✨",
+                alertMsg: "Lütfen isim ve oda adı girin!"
+            },
+            en: {
+                mainTitle: "🎄 Secret Santa 🎄",
+                subTitle: "Enter your name and join the same room with friends!",
+                namePlaceholder: "Your Name (e.g. John)",
+                roomPlaceholder: "Room Name (e.g. Office)",
+                joinBtn: "Join Lobby 🎅",
+                roomLabel: "Room:",
+                waitingText: "Waiting for friends...",
+                startBtn: "Start Draw 🎲",
+                waitingMsg: "Waiting for the admin to start... ⏳",
+                resultTitle: "🎁 You are buying a gift for:",
+                resultFooter: "Pick something nice! 🎄",
+                footerText: "Happy New Year! ✨",
+                alertMsg: "Please enter name and room name!"
+            }
+        };
+
+        function setLang(lang) {
+            currentLang = lang;
+            
+            // Buton stillerini güncelle
+            document.getElementById('btnTR').classList.remove('active');
+            document.getElementById('btnEN').classList.remove('active');
+            document.getElementById('btn' + lang.toUpperCase()).classList.add('active');
+
+            // Yazıları güncelle
+            const t = translations[lang];
+            document.getElementById('mainTitle').innerText = t.mainTitle;
+            document.getElementById('subTitle').innerText = t.subTitle;
+            document.getElementById('username').placeholder = t.namePlaceholder;
+            document.getElementById('room').placeholder = t.roomPlaceholder;
+            document.getElementById('joinBtn').innerText = t.joinBtn;
+            document.getElementById('roomLabel').innerText = t.roomLabel;
+            document.getElementById('waitingText').innerText = t.waitingText;
+            document.getElementById('startBtn').innerText = t.startBtn;
+            document.getElementById('beklemeMesaji').innerText = t.waitingMsg;
+            document.getElementById('resultTitle').innerText = t.resultTitle;
+            document.getElementById('resultFooter').innerText = t.resultFooter;
+            document.getElementById('footerText').innerText = t.footerText;
+        }
 
         function katil() {
             var user = document.getElementById('username').value.trim();
             myRoom = document.getElementById('room').value.trim();
             
             if(user && myRoom) {
-                // Sunucuya katılma isteği gönder
                 socket.emit('lobiye_katil', {username: user, room: myRoom});
-                
-                // Ekranları değiştir
                 document.getElementById('girisEkrani').style.display = 'none';
                 document.getElementById('lobiEkrani').style.display = 'block';
                 document.getElementById('odaAdi').innerText = myRoom;
             } else {
-                alert("Lütfen isim ve oda adı girin!");
+                alert(translations[currentLang].alertMsg);
             }
         }
 
@@ -196,7 +278,6 @@
             socket.emit('cekilisi_baslat', {room: myRoom});
         }
 
-        // Lobi listesi güncellendiğinde
         socket.on('kullanici_listesi', function(isimler) {
             var listeHtml = "";
             isimler.forEach(function(isim) {
@@ -205,20 +286,16 @@
             document.getElementById('liste').innerHTML = listeHtml;
         });
 
-        // Sunucudan yetki bilgisi geldiğinde
         socket.on('admin_yetkisi', function(data) {
             if (data.admin_mi) {
-                // YÖNETİCİ: Butonu göster
                 document.getElementById('yoneticiPaneli').style.display = 'block';
                 document.getElementById('beklemeMesaji').style.display = 'none';
             } else {
-                // MİSAFİR: Bekleme mesajını göster
                 document.getElementById('yoneticiPaneli').style.display = 'none';
                 document.getElementById('beklemeMesaji').style.display = 'block';
             }
         });
 
-        // Sonuç geldiğinde
         socket.on('sonuc_ekrani', function(data) {
             document.getElementById('lobiEkrani').style.display = 'none';
             document.getElementById('sonuc').style.display = 'block';
