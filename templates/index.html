@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Yılbaşı Çekilişi</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.0.1/socket.io.js"></script>
+    <style>
+        body { font-family: sans-serif; text-align: center; padding: 50px; }
+        #sonuc { font-size: 2em; color: green; display: none; }
+        #liste { list-style: none; padding: 0; }
+    </style>
+</head>
+<body>
+    <h1>🎄 Yılbaşı Çekilişi 🎄</h1>
+    
+    <div id="girisEkrani">
+        <input type="text" id="username" placeholder="Adınız">
+        <input type="text" id="room" placeholder="Oda Adı (örn: Aile)">
+        <button onclick="katil()">Lobiye Gir</button>
+    </div>
+
+    <div id="lobiEkrani" style="display:none;">
+        <h3>Lobi: <span id="odaAdi"></span></h3>
+        <ul id="liste"></ul>
+        <button onclick="baslat()">Çekilişi Başlat 🎲</button>
+    </div>
+
+    <div id="sonuc">
+        Hediye Alacağın Kişi: <br>
+        <b id="hedefKisi"></b>
+    </div>
+
+    <script>
+        var socket = io();
+        var myRoom = "";
+
+        function katil() {
+            var user = document.getElementById('username').value;
+            myRoom = document.getElementById('room').value;
+            if(user && myRoom) {
+                socket.emit('lobiye_katil', {username: user, room: myRoom});
+                document.getElementById('girisEkrani').style.display = 'none';
+                document.getElementById('lobiEkrani').style.display = 'block';
+                document.getElementById('odaAdi').innerText = myRoom;
+            }
+        }
+
+        function baslat() {
+            socket.emit('cekilisi_baslat', {room: myRoom});
+        }
+
+        socket.on('kullanici_listesi', function(isimler) {
+            var listeHtml = "";
+            isimler.forEach(function(isim) {
+                listeHtml += "<li>" + isim + "</li>";
+            });
+            document.getElementById('liste').innerHTML = listeHtml;
+        });
+
+        socket.on('sonuc_ekrani', function(data) {
+            document.getElementById('lobiEkrani').style.display = 'none';
+            document.getElementById('sonuc').style.display = 'block';
+            document.getElementById('hedefKisi').innerText = data.kime;
+        });
+    </script>
+</body>
+</html>
