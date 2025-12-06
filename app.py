@@ -1,3 +1,5 @@
+import eventlet
+eventlet.monkey_patch()
 import os
 import random
 from flask import Flask, render_template, request
@@ -102,3 +104,4 @@ def ai_oneri(data):
 # --- BAŞLATMA ---
 if __name__ == '__main__':
     socketio.run(app, debug=True)
+
