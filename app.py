@@ -24,11 +24,17 @@ def on_join(data):
     if room not in lobiler:
         lobiler[room] = {}
     
-    # Kullanıcıyı kaydet
+
+    is_admin = (len(lobiler[room]) == 0)
+
+   
     lobiler[room][request.sid] = username
     
-    # Odadaki herkese güncel listeyi gönder
+   
     emit('kullanici_listesi', list(lobiler[room].values()), to=room)
+    
+
+    emit('admin_yetkisi', {'admin_mi': is_admin}, to=request.sid)
 
 @socketio.on('cekilisi_baslat')
 def on_start(data):
@@ -54,4 +60,5 @@ def on_start(data):
             socketio.emit('sonuc_ekrani', {'kime': kime_alacak}, room=sid)
 
 if __name__ == '__main__':
+
     socketio.run(app, debug=True)
