@@ -8,7 +8,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Mountains+of+Christmas:wght@700&family=Poppins:wght@400;600&display=swap" rel="stylesheet">
     
     <style>
-        /* GENEL TASARIM */
+        /* --- GENEL TASARIM --- */
         body {
             background-color: #b3000c;
             background-image: radial-gradient(circle, #d40012 10%, #8a0006 90%);
@@ -23,7 +23,7 @@
             position: relative;
         }
 
-        /* DİL BUTONLARI */
+        /* Dil Butonları */
         .lang-switch {
             position: absolute;
             top: 20px;
@@ -47,6 +47,7 @@
             color: #b3000c;
         }
 
+        /* Ana Kart */
         .container {
             background: rgba(255, 255, 255, 0.95);
             padding: 30px;
@@ -67,6 +68,7 @@
             line-height: 1.2;
         }
 
+        /* Form Elemanları */
         input {
             width: 100%;
             padding: 15px;
@@ -102,6 +104,12 @@
             transform: scale(0.98);
         }
 
+        button:disabled {
+            background-color: #ccc;
+            cursor: not-allowed;
+        }
+
+        /* Liste */
         ul {
             list-style: none;
             padding: 0;
@@ -120,6 +128,7 @@
             font-size: 1rem;
         }
 
+        /* Sonuç ve AI Alanı */
         #sonuc {
             display: none;
             animation: fadeIn 1s;
@@ -132,6 +141,24 @@
             display: block;
             margin-top: 15px;
             text-shadow: 1px 1px 0px #ffd700;
+        }
+
+        .ai-section {
+            margin-top: 30px;
+            border-top: 1px solid #eebb00;
+            padding-top: 20px;
+        }
+
+        #aiSonuc {
+            display: none;
+            background: #f3e5f5;
+            padding: 15px;
+            border-radius: 10px;
+            margin-top: 15px;
+            text-align: left;
+            font-size: 0.9rem;
+            white-space: pre-line; /* Alt satıra geçmeyi sağlar */
+            border: 1px solid #ce93d8;
         }
 
         .oda-bilgisi {
@@ -191,6 +218,16 @@
         <div id="sonuc">
             <p id="resultTitle">🎁 Hediye Alacağın Kişi:</p>
             <span class="hedef-kisi" id="hedefKisi"></span>
+            
+            <div class="ai-section">
+                <p id="aiTitle" style="font-size: 0.9rem; font-weight: bold; color: #b3000c;">🤔 Hediye bulamadın mı? Yapay Zekaya Sor!</p>
+                <input type="text" id="ilgiAlanlari" placeholder="Nelerden hoşlanır? (Örn: Harry Potter, futbol)">
+                <button onclick="aiSor()" id="aiBtn" style="background-color: #6a1b9a; font-size: 16px;">✨ Hediye Önerisi İste</button>
+                
+                <div id="aiLoading" style="display:none; margin-top:10px; font-style: italic; color: #6a1b9a;">🤖 Düşünüyorum...</div>
+                <div id="aiSonuc"></div>
+            </div>
+
             <p id="resultFooter" style="margin-top:20px; font-size: 0.9rem;">Hadi iyisin, güzel bir hediye seç! 🎄</p>
         </div>
         
@@ -202,7 +239,7 @@
         var myRoom = "";
         var currentLang = "tr";
 
-        // DİL SÖZLÜĞÜ
+        // --- ÇOKLU DİL SÖZLÜĞÜ ---
         const translations = {
             tr: {
                 mainTitle: "🎄 Yılbaşı Çekilişi 🎄",
@@ -217,7 +254,13 @@
                 resultTitle: "🎁 Hediye Alacağın Kişi:",
                 resultFooter: "Hadi iyisin, güzel bir hediye seç! 🎄",
                 footerText: "Mutlu Yıllar! ✨",
-                alertMsg: "Lütfen isim ve oda adı girin!"
+                alertMsg: "Lütfen isim ve oda adı girin!",
+                // AI Bölümü
+                aiTitle: "🤔 Hediye bulamadın mı? Yapay Zekaya Sor!",
+                aiPlaceholder: "Nelerden hoşlanır? (Örn: Harry Potter, futbol)",
+                aiBtn: "✨ Hediye Önerisi İste",
+                aiLoading: "🤖 Düşünüyorum...",
+                aiAlert: "Lütfen ilgi alanlarını yaz!"
             },
             en: {
                 mainTitle: "🎄 Secret Santa 🎄",
@@ -232,19 +275,26 @@
                 resultTitle: "🎁 You are buying a gift for:",
                 resultFooter: "Pick something nice! 🎄",
                 footerText: "Happy New Year! ✨",
-                alertMsg: "Please enter name and room name!"
+                alertMsg: "Please enter name and room name!",
+                // AI Section
+                aiTitle: "🤔 Can't decide? Ask AI!",
+                aiPlaceholder: "What do they like? (e.g. Harry Potter, soccer)",
+                aiBtn: "✨ Get Gift Ideas",
+                aiLoading: "🤖 Thinking...",
+                aiAlert: "Please enter interests!"
             }
         };
 
+        // --- DİL DEĞİŞTİRME FONKSİYONU ---
         function setLang(lang) {
             currentLang = lang;
             
-            // Buton stillerini güncelle
+            // Buton aktiflik durumu
             document.getElementById('btnTR').classList.remove('active');
             document.getElementById('btnEN').classList.remove('active');
             document.getElementById('btn' + lang.toUpperCase()).classList.add('active');
 
-            // Yazıları güncelle
+            // Metinleri güncelle
             const t = translations[lang];
             document.getElementById('mainTitle').innerText = t.mainTitle;
             document.getElementById('subTitle').innerText = t.subTitle;
@@ -258,8 +308,15 @@
             document.getElementById('resultTitle').innerText = t.resultTitle;
             document.getElementById('resultFooter').innerText = t.resultFooter;
             document.getElementById('footerText').innerText = t.footerText;
+            
+            // AI Metinlerini güncelle
+            document.getElementById('aiTitle').innerText = t.aiTitle;
+            document.getElementById('ilgiAlanlari').placeholder = t.aiPlaceholder;
+            document.getElementById('aiBtn').innerText = t.aiBtn;
+            document.getElementById('aiLoading').innerText = t.aiLoading;
         }
 
+        // --- LOBİYE KATILMA ---
         function katil() {
             var user = document.getElementById('username').value.trim();
             myRoom = document.getElementById('room').value.trim();
@@ -274,10 +331,28 @@
             }
         }
 
+        // --- ÇEKİLİŞİ BAŞLATMA ---
         function baslat() {
             socket.emit('cekilisi_baslat', {room: myRoom});
         }
 
+        // --- AI HEDİYE ÖNERİSİ İSTEME ---
+        function aiSor() {
+            var ilgi = document.getElementById('ilgiAlanlari').value;
+            if(!ilgi) return alert(translations[currentLang].aiAlert);
+            
+            // UI Güncelleme
+            document.getElementById('aiLoading').style.display = 'block';
+            document.getElementById('aiSonuc').style.display = 'none';
+            document.getElementById('aiBtn').disabled = true;
+
+            // Sunucuya gönder (Dil bilgisiyle beraber)
+            socket.emit('hediye_fikri_ver', {ilgi: ilgi, lang: currentLang});
+        }
+
+        // --- SOCKET EVENTLERİ ---
+        
+        // 1. Kullanıcı Listesi Gelince
         socket.on('kullanici_listesi', function(isimler) {
             var listeHtml = "";
             isimler.forEach(function(isim) {
@@ -286,6 +361,7 @@
             document.getElementById('liste').innerHTML = listeHtml;
         });
 
+        // 2. Yönetici Yetkisi Gelince
         socket.on('admin_yetkisi', function(data) {
             if (data.admin_mi) {
                 document.getElementById('yoneticiPaneli').style.display = 'block';
@@ -296,11 +372,24 @@
             }
         });
 
+        // 3. Sonuç Ekranı Gelince
         socket.on('sonuc_ekrani', function(data) {
             document.getElementById('lobiEkrani').style.display = 'none';
             document.getElementById('sonuc').style.display = 'block';
             document.getElementById('hedefKisi').innerText = data.kime;
         });
+
+        // 4. AI Cevabı Gelince
+        socket.on('ai_cevabi', function(data) {
+            document.getElementById('aiLoading').style.display = 'none';
+            document.getElementById('aiBtn').disabled = false;
+            
+            var sonucKutusu = document.getElementById('aiSonuc');
+            sonucKutusu.style.display = 'block';
+            // Emoji ekleyerek gösterelim
+            sonucKutusu.innerText = "🎁 " + (currentLang === 'tr' ? "Öneriler:" : "Suggestions:") + "\n" + data.cevap;
+        });
+
     </script>
 </body>
 </html>
